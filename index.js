@@ -65,6 +65,15 @@ async function run() {
     res.send(data);
 });
 
+
+  app.get('/polls/:id', async (req, res) => {
+    const currentTime = new Date();
+    const { id } = req.params;
+    const result = ordersCollections.find(id);
+    const data = await result.toArray();
+    res.send(data);
+});
+
 app.patch("/polls/:id", async (req, res) => {
   const { id } = req.params; // Get the product ID from the URL parameters
   const data = req.body; 
