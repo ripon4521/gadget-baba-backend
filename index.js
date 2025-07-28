@@ -1,26 +1,31 @@
+const express = require('express');
+require('dotenv').config(); // Load environment variables from .env file
 
+const app = express();
 
+const cors = require('cors');
+const port = process.env.PORT || 5000; // Port 5000 or the port set in .env file
 
-const express = require('express')
-require('dotenv').config()
+app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // Parse JSON request bodies
 
-const app = express()
+// Cloudinary and Multer import
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
 
-const cors = require('cors')
-const port = process.env.PORT ||5000;
+// Cloudinary configuration - MUST load from .env for security and proper configuration
+cloudinary.config({
+  cloud_name: "dpy7b0pzi",
+  api_key: "322116617444728",
+  api_secret: "Aaa-DCcHuL3g-IoOwfS14kwERMM"
+});
+// Multer setup: files will be stored in memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
-app.use(cors());
-app.use(express.json())
-
-
-
-
-
-
-
-const { MongoClient, ServerApiVersion, ObjectId  } = require('mongodb');
-const uri = `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
-// mongodb+srv://<username>:<password>@cluster0.b1mistq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+// MongoDB connection URI, should be in your .env file
+const uri = process.env.MONGODB_URI || `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -30,90 +35,239 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    // Connect the client to the server
+    await client.connect();
 
-    const ordersCollections = client.db('HarbalShopDB').collection("polls");
+    // Define the database and collections
+    const database = client.db('HarbalShopDB');
+    const websiteDataCollection = database.collection("websiteData"); // Collection for website data
+    const ordersCollection = database.collection("orders"); // Collection for orders
 
-
-    app.post('/polls/create-polls', async (req, res) => {
-      const { expiresIn } = req.body;
-  
-      let expireTime;
-      if (expiresIn === "1h") expireTime = 1 * 60 * 60;       // 1 hour in seconds
-      else if (expiresIn === "12h") expireTime = 12 * 60 * 60; // 12 hours in seconds
-      else if (expiresIn === "24h") expireTime = 24 * 60 * 60; // 24 hours in seconds
-      else expireTime = 24 * 60 * 60; // Default to 24 hours if invalid input
-  
-      const data = {
-          ...req.body,
-          createdAt: new Date(),
-          expiresAt: new Date(Date.now() + expireTime * 1000), // Set expire time
+    // Insert initial website data if the collection is empty
+    const existingWebsiteData = await websiteDataCollection.findOne({});
+    if (!existingWebsiteData) {
+      const initialWebsiteData = {
+        header: {
+          logo: "https://placehold.co/150x50/E53E3E/FFFFFF?text=RAMISHA+LOGO", // Placeholder Cloudinary-like URL
+          mainHeading: "একটানা ১২০ ঘন্টা চার্জ সুবিধা। ৫ টি ভয়েস চেঞ্জ সুবিধা। সাথে থাকছে সম্পূর্ণ ফ্রি ডেলিভারি। 🔥",
+          ctaButtonText: "অর্ডার করতে চাই"
+        },
+        features: [
+          {
+            heading: "এক চার্জে চলবে টানা ১২০ ঘন্টা ও ৫ টি ভয়েস চেঞ্জ মুড",
+            ctaButtonText: "এখনই অর্ডার করুন",
+            listItems: [
+              "১২০ ঘন্টা ব্যাটারি ব্যাকআপে অডিও অভিজ্ঞতা নতুন উচ্চতায়।",
+              "5 Voice Changer – ভিন্ন ভিন্ন ভয়েস চেঞ্জ সুবিধা ।",
+              "120 ঘণ্টা টক টাইম এবং 60 ঘণ্টা মিউজিক প্লেব্যাক।",
+              "ENC on off option. ",
+              " Bluetooth 5.3 + Touch Control – সুপার ফাস্ট কানেকশন।",
+              "Type-C ফাস্ট চার্জিং – মাত্র 2.5 ঘণ্টায় ফুল চার্জ।",
+              "Sweatproof & Comfortable Fit – স্পোর্টস এবং দীর্ঘ সময় ব্যবহারের জন্য পারফেক্ট ও হালকা ভিজে যাওয়া অথবা ঘেমে গেলেও সমস্যা হবে না। ",
+              "15M Transmission Range – মেটাল ইয়ারবাডের সাথে শক্তিশালী কানেক্টিভিটি।",
+              " ইনকামিং ভাইব্রেটর - কল আসলে সহজেই বুঝতে পারবেন।",
+              " বিল্ড কোয়ালিটি মাশাল্লাহ খুবি চমৎকার। ",
+              " ৬০০ এম এইচ এর বিশাল ব্যাটারি৷ ",
+              "১০০% অরিজিনাল ও কোয়ালিটিফুল প্রোডাক্ট।"
+            ],
+            image: "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+1" // Placeholder Cloudinary-like URL
+          },
+          {
+            heading: "DON BT-300 সম্পর্কে কিছু কথা",
+            ctaButtonText: "এখনই অর্ডার করুন",
+            listItems: [
+              "১২০ ঘন্টা চার্জিং বেকআপ।",
+              "৫ টি ভয়েস চেঞ্জ মুড।",
+              "চমৎকার মিউজিক ও বেস",
+              "সাত দিনের রিপ্লেসমেন্ট গ্যারান্টি"
+            ],
+            image: "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+2" // Placeholder Cloudinary-like URL
+          }
+        ],
+        priceNotification: {
+          text: "⚠️ রেগুলার প্রাইস ১৫৫০ টাকা। এখন অফার মূল্য ৯৪৯ টাকা। ",
+          deliveryInfo: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚"
+        },
+        videos: [
+          "https://www.w3schools.com/html/mov_bbb.mp4", // Placeholder video URL
+          "https://www.w3schools.com/html/movie.mp4" // Placeholder video URL
+        ],
+        previewImages: [
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+1", // Placeholder Cloudinary-like URL
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+2", // Placeholder Cloudinary-like URL
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+3" // Placeholder Cloudinary-like URL
+        ],
+        contact: {
+          heading: "আমাদের সাথে যুক্ত হোন",
+          description: "ফ্রি ডেলিভারির সুবিধা নিতে এখনই অর্ডার দিন।",
+          helplineNumber: "+8801855844693",
+          callButtonText: "📞 কল করুন"
+        },
+        orderForm: {
+          title: "অর্ডার করতে নিচের ফর্মটি পূরণ করুন",
+          offerTxt: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚",
+          productName: "DON BT - 300",
+          price: "রেগুলার প্রাইস ১৫৫০ টাকা। এখন অফার মূল্য ৯৪৯ টাকা।",
+          placeOrderButtonText: " Place Order ৳949.00"
+        },
+        footer: {
+          copyright: "Copyright &copy; 2025 Gadget Baba Online |",
+          builtByText: "Built with ❤️ by ",
+          agencyName: "Notex",
+          agencyLink: "https://notexagency.vercel.app/"
+        }
       };
-  
-      const result = await ordersCollections.insertOne(data);
-      res.send(result);
-  });
-  
-
-  app.get('/polls', async (req, res) => {
-    const currentTime = new Date();
-    const result = ordersCollections.find();
-    const data = await result.toArray();
-    res.send(data);
-});
-
-
-  app.get('/polls/:id', async (req, res) => {
-    const currentTime = new Date();
-    const { id } = req.params;
-    const result = ordersCollections.find(id);
-    const data = await result.toArray();
-    res.send(data);
-});
-
-app.patch("/polls/:id", async (req, res) => {
-  const { id } = req.params; // Get the product ID from the URL parameters
-  const data = req.body; 
-  console.log(data)
-
-  // Validate if the provided ID is a valid MongoDB ObjectId
-  if (!ObjectId.isValid(id)) {
-    return res.status(400).send({ message: "Invalid product ID format" });
-  }
-
-  try {
-    // Log the incoming request for debugging
-    console.log("Attempting to update product with ID:", id);
-    console.log("Product Data:", data);
-
-    // Use updateOne to update the product
-    const result = await ordersCollections.updateOne(
-      { _id: new ObjectId(id) }, // Find the product by its MongoDB ObjectId
-      { $set: data } // Use $set to update only the provided fields
-    );
-
-    // Check if the product was found and updated
-    if (result.modifiedCount === 0) {
-      return res
-        .status(404)
-        .send({ message: "Product not found or no changes made" });
+      await websiteDataCollection.insertOne(initialWebsiteData);
+      console.log("Initial website data inserted.");
     }
 
-    // Send a success response
-    res.status(200).send({ message: "Successfully updated product" });
-  } catch (error) {
-    console.error("Error updating product:", error);
-    res.status(500).send({ message: "Error updating product" });
-  }
-});
+
+    // --- API Routes related to Website Data ---
+
+    // Get all website data
+    app.get('/website-data', async (req, res) => {
+      try {
+        const data = await websiteDataCollection.findOne({}); // Get the first (and only) document
+        res.send(data);
+      } catch (error) {
+        console.error("Error fetching website data:", error);
+        res.status(500).send({ message: "Error fetching website data" });
+      }
+    });
+
+    // Update website data
+    app.patch('/website-data/:id', async (req, res) => {
+      const { id } = req.params;
+      const updatedData = req.body;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: "Invalid ID format" });
+      }
+
+      try {
+        const result = await websiteDataCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+
+        if (result.modifiedCount === 0) {
+          return res.status(404).send({ message: "Website data not found or no changes made" });
+        }
+        res.status(200).send({ message: "Website data updated successfully" });
+      } catch (error) {
+        console.error("Error updating website data:", error);
+        res.status(500).send({ message: "Error updating website data" });
+      }
+    });
+
+    // --- Cloudinary File Upload API ---
+    app.post('/upload-image', upload.single('image'), async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'কোনো ফাইল আপলোড করা হয়নি।' });
+        }
+
+        // Determine resource_type based on file mimetype
+        let resourceType = 'auto'; // Let Cloudinary automatically detect
+        if (req.file.mimetype.startsWith('image/')) {
+          resourceType = 'image';
+        } else if (req.file.mimetype.startsWith('video/')) {
+          resourceType = 'video';
+        }
+
+        // Upload file to Cloudinary
+        const result = await cloudinary.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {
+          folder: 'ramisha_telecom', // Your preferred folder name
+          resource_type: resourceType, // Specify file type
+          max_bytes: 20 * 1024 * 1024 // Increase file upload limit to 20MB
+        });
+
+        // Return the URL of the uploaded file
+        res.status(200).json({ url: result.secure_url });
+      } catch (error) {
+        console.error('ফাইল আপলোড করতে ত্রুটি:', error);
+        res.status(500).json({ message: 'ফাইল আপলোড করতে ব্যর্থ হয়েছে।', error: error.message });
+      }
+    });
 
 
+    // --- API Routes related to Orders ---
 
+    // Add a new order
+    app.post('/orders', async (req, res) => {
+      const order = req.body;
+      // Add a timestamp to the order
+      order.createdAt = new Date();
+      // Set default status
+      order.status = order.status || 'pending';
+      try {
+        const result = await ordersCollection.insertOne(order);
+        res.status(201).send(result); // 201 Created
+      } catch (error) {
+        console.error("Error adding order:", error);
+        res.status(500).send({ message: "Error adding order" });
+      }
+    });
 
+    // Get all orders
+    app.get('/orders', async (req, res) => {
+      try {
+        const orders = await ordersCollection.find({}).toArray();
+        res.send(orders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).send({ message: "Error fetching orders" });
+      }
+    });
 
+    // Update an order (e.g., change status)
+    app.patch('/orders/:id', async (req, res) => {
+      const { id } = req.params;
+      const updatedFields = req.body;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: "Invalid order ID format" });
+      }
+
+      try {
+        const result = await ordersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedFields }
+        );
+
+        if (result.modifiedCount === 0) {
+          return res.status(404).send({ message: "Order not found or no changes made" });
+        }
+        res.status(200).send({ message: "Order updated successfully" });
+      } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).send({ message: "Error updating order" });
+      }
+    });
+
+    // Delete an order
+    app.delete('/orders/:id', async (req, res) => {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: "Invalid order ID format" });
+      }
+
+      try {
+        const result = await ordersCollection.deleteOne({ _id: new ObjectId(id) });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ message: "Order not found" });
+        }
+        res.status(200).send({ message: "Order deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        res.status(500).send({ message: "Error deleting order" });
+      }
+    });
 
 
     // Send a ping to confirm a successful connection
@@ -121,26 +275,16 @@ app.patch("/polls/:id", async (req, res) => {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    // await client.close();
+    // await client.close(); // In production, it's usually kept open
   }
 }
 
-
-
-
-
-
-run().catch(console.dir);
-
-
-
-
+run().catch(console.dir); // Log errors to the console
 
 app.get('/', (req, res) => {
-  res.send('Welcome to Harbel Shop Server')
-
-})
+  res.send('Welcome to Harbal Shop Server');
+});
 
 app.listen(port, () => {
-  console.log(`Harbel Shop Server listening on port ${port}`)
-})
+  console.log(`Harbal Shop Server listening on port ${port}`);
+});
