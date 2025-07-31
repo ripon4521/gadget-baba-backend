@@ -198,6 +198,17 @@ async function run() {
       }
     });
 
+
+    // Get all orders
+    app.get("/orders", async (req, res) => {
+      try {
+        const orders = await ordersCollection.find({}).toArray();
+        res.send(orders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).send({ message: "Error fetching orders" });
+      }
+    });
     // Add a new order
     app.post("/orders", async (req, res) => {
       const order = req.body;
@@ -209,17 +220,6 @@ async function run() {
       } catch (error) {
         console.error("Error adding order:", error);
         res.status(500).send({ message: "Error adding order" });
-      }
-    });
-
-    // Get all orders
-    app.get("/orders", async (req, res) => {
-      try {
-        const orders = await ordersCollection.find({}).toArray();
-        res.send(orders);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        res.status(500).send({ message: "Error fetching orders" });
       }
     });
 
