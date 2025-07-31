@@ -1,39 +1,34 @@
-const express = require('express');
-require('dotenv').config(); // Load environment variables from .env file
-
+const express = require("express");
+require("dotenv").config(); 
 const app = express();
 
-const cors = require('cors');
-const port =  5000; // Port 5000 or the port set in .env file
+const cors = require("cors");
+const port = 5000; 
 
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse JSON request bodies
+app.use(cors()); 
+app.use(express.json()); 
 
-// Cloudinary and Multer import
-const cloudinary = require('cloudinary').v2;
-const multer = require('multer');
 
-// Cloudinary configuration - MUST load from .env for security and proper configuration
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+
 cloudinary.config({
   cloud_name: "dpy7b0pzi",
   api_key: "322116617444728",
-  api_secret: "Aaa-DCcHuL3g-IoOwfS14kwERMM"
+  api_secret: "Aaa-DCcHuL3g-IoOwfS14kwERMM",
 });
-// Multer setup: files will be stored in memory
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-// MongoDB connection URI, should be in your .env file
-const uri =  `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const uri = `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -42,7 +37,7 @@ async function run() {
     await client.connect();
 
     // Define the database and collections
-    const database = client.db('HarbalShopDB');
+    const database = client.db("HarbalShopDB");
     const websiteDataCollection = database.collection("websiteData"); // Collection for website data
     const ordersCollection = database.collection("orders"); // Collection for orders
 
@@ -52,8 +47,9 @@ async function run() {
       const initialWebsiteData = {
         header: {
           logo: "https://placehold.co/150x50/E53E3E/FFFFFF?text=RAMISHA+LOGO", // Placeholder Cloudinary-like URL
-          mainHeading: "একটানা ১২০ ঘন্টা চার্জ সুবিধা। ৫ টি ভয়েস চেঞ্জ সুবিধা। সাথে থাকছে সম্পূর্ণ ফ্রি ডেলিভারি। 🔥",
-          ctaButtonText: "অর্ডার করতে চাই"
+          mainHeading:
+            "একটানা ১২০ ঘন্টা চার্জ সুবিধা। ৫ টি ভয়েস চেঞ্জ সুবিধা। সাথে থাকছে সম্পূর্ণ ফ্রি ডেলিভারি। 🔥",
+          ctaButtonText: "অর্ডার করতে চাই",
         },
         features: [
           {
@@ -71,9 +67,10 @@ async function run() {
               " ইনকামিং ভাইব্রেটর - কল আসলে সহজেই বুঝতে পারবেন।",
               " বিল্ড কোয়ালিটি মাশাল্লাহ খুবি চমৎকার। ",
               " ৬০০ এম এইচ এর বিশাল ব্যাটারি৷ ",
-              "১০০% অরিজিনাল ও কোয়ালিটিফুল প্রোডাক্ট।"
+              "১০০% অরিজিনাল ও কোয়ালিটিফুল প্রোডাক্ট।",
             ],
-            image: "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+1" // Placeholder Cloudinary-like URL
+            image:
+              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+1", // Placeholder Cloudinary-like URL
           },
           {
             heading: "DON BT-300 সম্পর্কে কিছু কথা",
@@ -82,55 +79,55 @@ async function run() {
               "১২০ ঘন্টা চার্জিং বেকআপ।",
               "৫ টি ভয়েস চেঞ্জ মুড।",
               "চমৎকার মিউজিক ও বেস",
-              "সাত দিনের রিপ্লেসমেন্ট গ্যারান্টি"
+              "সাত দিনের রিপ্লেসমেন্ট গ্যারান্টি",
             ],
-            image: "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+2" // Placeholder Cloudinary-like URL
-          }
+            image:
+              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+2", // Placeholder Cloudinary-like URL
+          },
         ],
         priceNotification: {
           text: "⚠️ রেগুলার প্রাইস ১৫৫০ টাকা। এখন অফার মূল্য ৯৪৯ টাকা। ",
-          deliveryInfo: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚"
+          deliveryInfo: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚",
         },
         videos: [
           "https://www.w3schools.com/html/mov_bbb.mp4", // Placeholder video URL
-          "https://www.w3schools.com/html/movie.mp4" // Placeholder video URL
+          "https://www.w3schools.com/html/movie.mp4", // Placeholder video URL
         ],
         previewImages: [
           "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+1", // Placeholder Cloudinary-like URL
           "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+2", // Placeholder Cloudinary-like URL
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+3" // Placeholder Cloudinary-like URL
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+3", // Placeholder Cloudinary-like URL
         ],
         contact: {
           heading: "আমাদের সাথে যুক্ত হোন",
           description: "ফ্রি ডেলিভারির সুবিধা নিতে এখনই অর্ডার দিন।",
           helplineNumber: "+8801855844693",
-          callButtonText: "📞 কল করুন"
+          callButtonText: "📞 কল করুন",
         },
         orderForm: {
           title: "অর্ডার করতে নিচের ফর্মটি পূরণ করুন",
           offerTxt: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚",
           productName: "DON BT - 300",
           price: "রেগুলার প্রাইস ১৫৫০ টাকা। এখন অফার মূল্য ৯৪৯ টাকা।",
-          placeOrderButtonText: " Place Order ৳949.00"
+          placeOrderButtonText: " Place Order ৳949.00",
         },
         footer: {
           copyright: "Copyright &copy; 2025 Gadget Baba Online |",
           builtByText: "Built with ❤️ by ",
           agencyName: "Notex",
-          agencyLink: "https://notexagency.vercel.app/"
-        }
+          agencyLink: "https://notexagency.vercel.app/",
+        },
       };
       await websiteDataCollection.insertOne(initialWebsiteData);
       console.log("Initial website data inserted.");
     }
 
-
     // --- API Routes related to Website Data ---
 
     // Get all website data
-    app.get('/website-data', async (req, res) => {
+    app.get("/website-data", async (req, res) => {
       try {
-        const data = await websiteDataCollection.findOne({}); // Get the first (and only) document
+        const data = await websiteDataCollection.findOne({}); 
         res.send(data);
       } catch (error) {
         console.error("Error fetching website data:", error);
@@ -139,7 +136,7 @@ async function run() {
     });
 
     // Update website data
-    app.patch('/website-data/:id', async (req, res) => {
+    app.patch("/website-data/:id", async (req, res) => {
       const { id } = req.params;
       const updatedData = req.body;
 
@@ -154,7 +151,9 @@ async function run() {
         );
 
         if (result.modifiedCount === 0) {
-          return res.status(404).send({ message: "Website data not found or no changes made" });
+          return res
+            .status(404)
+            .send({ message: "Website data not found or no changes made" });
         }
         res.status(200).send({ message: "Website data updated successfully" });
       } catch (error) {
@@ -164,48 +163,49 @@ async function run() {
     });
 
     // --- Cloudinary File Upload API ---
-    app.post('/upload-image', upload.single('image'), async (req, res) => {
+    app.post("/upload-image", upload.single("image"), async (req, res) => {
       try {
         if (!req.file) {
-          return res.status(400).json({ message: 'কোনো ফাইল আপলোড করা হয়নি।' });
+          return res
+            .status(400)
+            .json({ message: "কোনো ফাইল আপলোড করা হয়নি।" });
         }
-
-        // Determine resource_type based on file mimetype
-        let resourceType = 'auto'; // Let Cloudinary automatically detect
-        if (req.file.mimetype.startsWith('image/')) {
-          resourceType = 'image';
-        } else if (req.file.mimetype.startsWith('video/')) {
-          resourceType = 'video';
+        let resourceType = "auto"; 
+        if (req.file.mimetype.startsWith("image/")) {
+          resourceType = "image";
+        } else if (req.file.mimetype.startsWith("video/")) {
+          resourceType = "video";
         }
-
-        // Upload file to Cloudinary
-        const result = await cloudinary.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {
-          folder: 'ramisha_telecom', // Your preferred folder name
-          resource_type: resourceType, // Specify file type
-          max_bytes: 20 * 1024 * 1024 // Increase file upload limit to 20MB
-        });
-
-        // Return the URL of the uploaded file
+        const result = await cloudinary.uploader.upload(
+          `data:${req.file.mimetype};base64,${req.file.buffer.toString(
+            "base64"
+          )}`,
+          {
+            folder: "ramisha_telecom", 
+            resource_type: resourceType, 
+            max_bytes: 20 * 1024 * 1024, 
+          }
+        );
         res.status(200).json({ url: result.secure_url });
       } catch (error) {
-        console.error('ফাইল আপলোড করতে ত্রুটি:', error);
-        res.status(500).json({ message: 'ফাইল আপলোড করতে ব্যর্থ হয়েছে।', error: error.message });
+        console.error("ফাইল আপলোড করতে ত্রুটি:", error);
+        res
+          .status(500)
+          .json({
+            message: "ফাইল আপলোড করতে ব্যর্থ হয়েছে।",
+            error: error.message,
+          });
       }
     });
 
-
-
-
     // Add a new order
-    app.post('/orders', async (req, res) => {
+    app.post("/orders", async (req, res) => {
       const order = req.body;
-      // Add a timestamp to the order
       order.createdAt = new Date();
-      // Set default status
-      order.status = order.status || 'pending';
+      order.status = order.status || "pending";
       try {
         const result = await ordersCollection.insertOne(order);
-        res.status(201).send(result); // 201 Created
+        res.status(201).send(result); 
       } catch (error) {
         console.error("Error adding order:", error);
         res.status(500).send({ message: "Error adding order" });
@@ -213,7 +213,7 @@ async function run() {
     });
 
     // Get all orders
-    app.get('/orders', async (req, res) => {
+    app.get("/orders", async (req, res) => {
       try {
         const orders = await ordersCollection.find({}).toArray();
         res.send(orders);
@@ -224,7 +224,7 @@ async function run() {
     });
 
     // Update an order (e.g., change status)
-    app.patch('/orders/:id', async (req, res) => {
+    app.patch("/orders/:id", async (req, res) => {
       const { id } = req.params;
       const updatedFields = req.body;
 
@@ -239,7 +239,9 @@ async function run() {
         );
 
         if (result.modifiedCount === 0) {
-          return res.status(404).send({ message: "Order not found or no changes made" });
+          return res
+            .status(404)
+            .send({ message: "Order not found or no changes made" });
         }
         res.status(200).send({ message: "Order updated successfully" });
       } catch (error) {
@@ -248,8 +250,7 @@ async function run() {
       }
     });
 
-    // Delete an order
-    app.delete('/orders/:id', async (req, res) => {
+    app.delete("/orders/:id", async (req, res) => {
       const { id } = req.params;
 
       if (!ObjectId.isValid(id)) {
@@ -257,7 +258,9 @@ async function run() {
       }
 
       try {
-        const result = await ordersCollection.deleteOne({ _id: new ObjectId(id) });
+        const result = await ordersCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
 
         if (result.deletedCount === 0) {
           return res.status(404).send({ message: "Order not found" });
@@ -269,20 +272,18 @@ async function run() {
       }
     });
 
-
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close(); // In production, it's usually kept open
   }
 }
 
-run().catch(console.dir); // Log errors to the console
+run().catch(console.dir);
 
-app.get('/', (req, res) => {
-  res.send('Welcome to Harbal Shop Server');
+app.get("/", (req, res) => {
+  res.send("Welcome to Harbal Shop Server");
 });
 
 app.listen(port, () => {
