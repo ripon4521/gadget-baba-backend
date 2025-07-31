@@ -4,7 +4,7 @@ require('dotenv').config(); // Load environment variables from .env file
 const app = express();
 
 const cors = require('cors');
-const port = process.env.PORT || 5000; // Port 5000 or the port set in .env file
+const port =  5000; // Port 5000 or the port set in .env file
 
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // Parse JSON request bodies
@@ -25,7 +25,7 @@ const upload = multer({ storage: storage });
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 // MongoDB connection URI, should be in your .env file
-const uri = process.env.MONGODB_URI || `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
+const uri =  `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
