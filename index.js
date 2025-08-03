@@ -1,27 +1,25 @@
 const express = require("express");
-require("dotenv").config(); 
+require("dotenv").config();
 const app = express();
 const cors = require("cors");
-const port = 5000; 
 
-app.use(cors()); 
-app.use(express.json()); 
-
+app.use(cors());
+app.use(express.json());
 
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
 cloudinary.config({
-  cloud_name: "dpy7b0pzi",
-  api_key: "322116617444728",
-  api_secret: "Aaa-DCcHuL3g-IoOwfS14kwERMM",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -32,20 +30,18 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server
     await client.connect();
-
-    // Define the database and collections
     const database = client.db("HarbalShopDB");
-    const websiteDataCollection = database.collection("websiteData"); // Collection for website data
-    const ordersCollection = database.collection("orders"); // Collection for orders
+    const websiteDataCollection = database.collection("websiteData");
+    const ordersCollection = database.collection("orders");
 
-    // Insert initial website data if the collection is empty
+    // Check and insert initial data
     const existingWebsiteData = await websiteDataCollection.findOne({});
     if (!existingWebsiteData) {
       const initialWebsiteData = {
+        // Your initial data object
         header: {
-          logo: "https://placehold.co/150x50/E53E3E/FFFFFF?text=RAMISHA+LOGO", // Placeholder Cloudinary-like URL
+          logo: "https://placehold.co/150x50/E53E3E/FFFFFF?text=RAMISHA+LOGO",
           mainHeading:
             "একটানা ১২০ ঘন্টা চার্জ সুবিধা। ৫ টি ভয়েস চেঞ্জ সুবিধা। সাথে থাকছে সম্পূর্ণ ফ্রি ডেলিভারি। 🔥",
           ctaButtonText: "অর্ডার করতে চাই",
@@ -69,7 +65,7 @@ async function run() {
               "১০০% অরিজিনাল ও কোয়ালিটিফুল প্রোডাক্ট।",
             ],
             image:
-              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+1", // Placeholder Cloudinary-like URL
+              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+1",
           },
           {
             heading: "DON BT-300 সম্পর্কে কিছু কথা",
@@ -81,7 +77,7 @@ async function run() {
               "সাত দিনের রিপ্লেসমেন্ট গ্যারান্টি",
             ],
             image:
-              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+2", // Placeholder Cloudinary-like URL
+              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+2",
           },
         ],
         priceNotification: {
@@ -89,13 +85,13 @@ async function run() {
           deliveryInfo: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚",
         },
         videos: [
-          "https://www.w3schools.com/html/mov_bbb.mp4", // Placeholder video URL
-          "https://www.w3schools.com/html/movie.mp4", // Placeholder video URL
+          "https://www.w3schools.com/html/mov_bbb.mp4",
+          "https://www.w3schools.com/html/movie.mp4",
         ],
         previewImages: [
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+1", // Placeholder Cloudinary-like URL
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+2", // Placeholder Cloudinary-like URL
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+3", // Placeholder Cloudinary-like URL
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+1",
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+2",
+          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+3",
         ],
         contact: {
           heading: "আমাদের সাথে যুক্ত হোন",
@@ -120,13 +116,12 @@ async function run() {
       await websiteDataCollection.insertOne(initialWebsiteData);
       console.log("Initial website data inserted.");
     }
+    
+    // --- API Routes ---
 
-    // --- API Routes related to Website Data ---
-
-    // Get all website data
     app.get("/website-data", async (req, res) => {
       try {
-        const data = await websiteDataCollection.findOne({}); 
+        const data = await websiteDataCollection.findOne({});
         res.send(data);
       } catch (error) {
         console.error("Error fetching website data:", error);
@@ -134,21 +129,17 @@ async function run() {
       }
     });
 
-    // Update website data
     app.patch("/website-data/:id", async (req, res) => {
       const { id } = req.params;
       const updatedData = req.body;
-
       if (!ObjectId.isValid(id)) {
         return res.status(400).send({ message: "Invalid ID format" });
       }
-
       try {
         const result = await websiteDataCollection.updateOne(
           { _id: new ObjectId(id) },
           { $set: updatedData }
         );
-
         if (result.modifiedCount === 0) {
           return res
             .status(404)
@@ -161,44 +152,30 @@ async function run() {
       }
     });
 
-    // --- Cloudinary File Upload API ---
     app.post("/upload-image", upload.single("image"), async (req, res) => {
       try {
         if (!req.file) {
-          return res
-            .status(400)
-            .json({ message: "কোনো ফাইল আপলোড করা হয়নি।" });
+          return res.status(400).json({ message: "কোনো ফাইল আপলোড করা হয়নি।" });
         }
-        let resourceType = "auto"; 
-        if (req.file.mimetype.startsWith("image/")) {
-          resourceType = "image";
-        } else if (req.file.mimetype.startsWith("video/")) {
-          resourceType = "video";
-        }
+        let resourceType = req.file.mimetype.startsWith("video/") ? "video" : "image";
         const result = await cloudinary.uploader.upload(
-          `data:${req.file.mimetype};base64,${req.file.buffer.toString(
-            "base64"
-          )}`,
+          `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
           {
-            folder: "ramisha_telecom", 
-            resource_type: resourceType, 
-            max_bytes: 20 * 1024 * 1024, 
+            folder: "ramisha_telecom",
+            resource_type: resourceType,
+            max_bytes: 20 * 1024 * 1024,
           }
         );
         res.status(200).json({ url: result.secure_url });
       } catch (error) {
         console.error("ফাইল আপলোড করতে ত্রুটি:", error);
-        res
-          .status(500)
-          .json({
-            message: "ফাইল আপলোড করতে ব্যর্থ হয়েছে।",
-            error: error.message,
-          });
+        res.status(500).json({
+          message: "ফাইল আপলোড করতে ব্যর্থ হয়েছে।",
+          error: error.message,
+        });
       }
     });
 
-
-    // Get all orders
     app.get("/orders", async (req, res) => {
       try {
         const orders = await ordersCollection.find({}).toArray();
@@ -208,39 +185,33 @@ async function run() {
         res.status(500).send({ message: "Error fetching orders" });
       }
     });
-    // Add a new order
+
     app.post("/orders", async (req, res) => {
       const order = req.body;
       order.createdAt = new Date();
       order.status = order.status || "pending";
       try {
         const result = await ordersCollection.insertOne(order);
-        res.status(201).send(result); 
+        res.status(201).send(result);
       } catch (error) {
         console.error("Error adding order:", error);
         res.status(500).send({ message: "Error adding order" });
       }
     });
 
-    // Update an order (e.g., change status)
     app.patch("/orders/:id", async (req, res) => {
       const { id } = req.params;
       const updatedFields = req.body;
-
       if (!ObjectId.isValid(id)) {
         return res.status(400).send({ message: "Invalid order ID format" });
       }
-
       try {
         const result = await ordersCollection.updateOne(
           { _id: new ObjectId(id) },
           { $set: updatedFields }
         );
-
         if (result.modifiedCount === 0) {
-          return res
-            .status(404)
-            .send({ message: "Order not found or no changes made" });
+          return res.status(404).send({ message: "Order not found or no changes made" });
         }
         res.status(200).send({ message: "Order updated successfully" });
       } catch (error) {
@@ -251,16 +222,11 @@ async function run() {
 
     app.delete("/orders/:id", async (req, res) => {
       const { id } = req.params;
-
       if (!ObjectId.isValid(id)) {
         return res.status(400).send({ message: "Invalid order ID format" });
       }
-
       try {
-        const result = await ordersCollection.deleteOne({
-          _id: new ObjectId(id),
-        });
-
+        const result = await ordersCollection.deleteOne({ _id: new ObjectId(id) });
         if (result.deletedCount === 0) {
           return res.status(404).send({ message: "Order not found" });
         }
@@ -271,20 +237,28 @@ async function run() {
       }
     });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
+    // Note: client.close() should NOT be called here for Vercel functions,
+    // as it will be handled automatically.
   }
 }
 
+// Ping the database once
 run().catch(console.dir);
 
+// This is the root route for Vercel
 app.get("/", (req, res) => {
   res.send("Welcome to Harbal Shop Server");
 });
 
-app.listen(port, () => {
-  console.log(`Harbal Shop Server listening on port ${port}`);
-});
+// Vercel handles the server, so we don't need app.listen()
+// for local testing you can still use it.
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(5000, () => {
+        console.log("Server is running on http://localhost:5000");
+    });
+}
+
+// Export the app for Vercel
+module.exports = app;
