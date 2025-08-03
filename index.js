@@ -1,25 +1,29 @@
 const express = require("express");
-require("dotenv").config();
+require("dotenv").config(); 
 const app = express();
 const cors = require("cors");
+const port = 5000; 
 
-app.use(cors());
-app.use(express.json());
+app.use(cors()); 
+app.use(express.json()); 
 
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
+// Your Cloudinary credentials are kept here as requested
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: "dpy7b0pzi",
+  api_key: "322116617444728",
+  api_secret: "Aaa-DCcHuL3g-IoOwfS14kwERMM",
 });
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = process.env.MONGODB_URI;
+
+// Your MongoDB URI is also kept here as requested
+const uri = `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -31,15 +35,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+
     const database = client.db("HarbalShopDB");
     const websiteDataCollection = database.collection("websiteData");
     const ordersCollection = database.collection("orders");
 
-    // Check and insert initial data
     const existingWebsiteData = await websiteDataCollection.findOne({});
     if (!existingWebsiteData) {
       const initialWebsiteData = {
-        // Your initial data object
         header: {
           logo: "https://placehold.co/150x50/E53E3E/FFFFFF?text=RAMISHA+LOGO",
           mainHeading:
@@ -116,12 +119,11 @@ async function run() {
       await websiteDataCollection.insertOne(initialWebsiteData);
       console.log("Initial website data inserted.");
     }
-    
-    // --- API Routes ---
 
+    // --- API Routes related to Website Data ---
     app.get("/website-data", async (req, res) => {
       try {
-        const data = await websiteDataCollection.findOne({});
+        const data = await websiteDataCollection.findOne({}); 
         res.send(data);
       } catch (error) {
         console.error("Error fetching website data:", error);
@@ -141,9 +143,7 @@ async function run() {
           { $set: updatedData }
         );
         if (result.modifiedCount === 0) {
-          return res
-            .status(404)
-            .send({ message: "Website data not found or no changes made" });
+          return res.status(404).send({ message: "Website data not found or no changes made" });
         }
         res.status(200).send({ message: "Website data updated successfully" });
       } catch (error) {
@@ -152,12 +152,13 @@ async function run() {
       }
     });
 
+    // --- Cloudinary File Upload API ---
     app.post("/upload-image", upload.single("image"), async (req, res) => {
       try {
         if (!req.file) {
           return res.status(400).json({ message: "কোনো ফাইল আপলোড করা হয়নি।" });
         }
-        let resourceType = req.file.mimetype.startsWith("video/") ? "video" : "image";
+        let resourceType = req.file.mimetype.startsWith("image/") ? "image" : "video";
         const result = await cloudinary.uploader.upload(
           `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
           {
@@ -176,6 +177,7 @@ async function run() {
       }
     });
 
+    // --- Orders API Routes ---
     app.get("/orders", async (req, res) => {
       try {
         const orders = await ordersCollection.find({}).toArray();
@@ -192,7 +194,7 @@ async function run() {
       order.status = order.status || "pending";
       try {
         const result = await ordersCollection.insertOne(order);
-        res.status(201).send(result);
+        res.status(201).send(result); 
       } catch (error) {
         console.error("Error adding order:", error);
         res.status(500).send({ message: "Error adding order" });
@@ -237,28 +239,27 @@ async function run() {
       }
     });
 
+    await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-    // Note: client.close() should NOT be called here for Vercel functions,
-    // as it will be handled automatically.
   }
 }
 
-// Ping the database once
+// Connect to MongoDB and then start the server
 run().catch(console.dir);
 
-// This is the root route for Vercel
 app.get("/", (req, res) => {
   res.send("Welcome to Harbal Shop Server");
 });
 
-// Vercel handles the server, so we don't need app.listen()
-// for local testing you can still use it.
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(5000, () => {
-        console.log("Server is running on http://localhost:5000");
-    });
-}
-
-// Export the app for Vercel
+// This is the key change for Vercel. 
+// Vercel handles the server, so we export the app instance.
 module.exports = app;
+
+// The app.listen part is for local development only.
+// Vercel will ignore this block.
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Harbal Shop Server listening on port ${port}`);
+  });
+}
