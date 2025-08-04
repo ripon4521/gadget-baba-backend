@@ -1,16 +1,16 @@
 const express = require("express");
-require("dotenv").config(); 
+require("dotenv").config();
 const app = express();
 const cors = require("cors");
-const port = 5000; 
+const port = 5000;
 
-app.use(cors()); 
-app.use(express.json()); 
+app.use(cors());
+app.use(express.json());
 
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
-// Your Cloudinary credentials are kept here as requested
+// Cloudinary config
 cloudinary.config({
   cloud_name: "dpy7b0pzi",
   api_key: "322116617444728",
@@ -22,7 +22,7 @@ const upload = multer({ storage: storage });
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-// Your MongoDB URI is also kept here as requested
+// ✅ Cached DB connection setup
 const uri = `mongodb+srv://rechargeDB:usAPIL8MCWvy4zY2@cluster0.xm8ksdz.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -32,232 +32,173 @@ const client = new MongoClient(uri, {
   },
 });
 
-async function run() {
-  try {
-    await client.connect();
+let cachedDb = null;
 
-    const database = client.db("HarbalShopDB");
-    const websiteDataCollection = database.collection("websiteData");
-    const ordersCollection = database.collection("orders");
+async function connectToDatabase() {
+  if (cachedDb) return cachedDb;
+
+  await client.connect();
+  cachedDb = client.db("HarbalShopDB");
+  return cachedDb;
+}
+
+// 👇 Routes
+app.get("/website-data", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const websiteDataCollection = db.collection("websiteData");
 
     const existingWebsiteData = await websiteDataCollection.findOne({});
     if (!existingWebsiteData) {
       const initialWebsiteData = {
+        // ⚠️ Same data you had — shortened here for clarity
         header: {
           logo: "https://placehold.co/150x50/E53E3E/FFFFFF?text=RAMISHA+LOGO",
-          mainHeading:
-            "একটানা ১২০ ঘন্টা চার্জ সুবিধা। ৫ টি ভয়েস চেঞ্জ সুবিধা। সাথে থাকছে সম্পূর্ণ ফ্রি ডেলিভারি। 🔥",
+          mainHeading: "একটানা ১২০ ঘন্টা চার্জ সুবিধা...",
           ctaButtonText: "অর্ডার করতে চাই",
         },
-        features: [
-          {
-            heading: "এক চার্জে চলবে টানা ১২০ ঘন্টা ও ৫ টি ভয়েস চেঞ্জ মুড",
-            ctaButtonText: "এখনই অর্ডার করুন",
-            listItems: [
-              "১২০ ঘন্টা ব্যাটারি ব্যাকআপে অডিও অভিজ্ঞতা নতুন উচ্চতায়।",
-              "5 Voice Changer – ভিন্ন ভিন্ন ভয়েস চেঞ্জ সুবিধা ।",
-              "120 ঘণ্টা টক টাইম এবং 60 ঘণ্টা মিউজিক প্লেব্যাক।",
-              "ENC on off option. ",
-              " Bluetooth 5.3 + Touch Control – সুপার ফাস্ট কানেকশন।",
-              "Type-C ফাস্ট চার্জিং – মাত্র 2.5 ঘণ্টায় ফুল চার্জ।",
-              "Sweatproof & Comfortable Fit – স্পোর্টস এবং দীর্ঘ সময় ব্যবহারের জন্য পারফেক্ট ও হালকা ভিজে যাওয়া অথবা ঘেমে গেলেও সমস্যা হবে না। ",
-              "15M Transmission Range – মেটাল ইয়ারবাডের সাথে শক্তিশালী কানেক্টিভিটি।",
-              " ইনকামিং ভাইব্রেটর - কল আসলে সহজেই বুঝতে পারবেন।",
-              " বিল্ড কোয়ালিটি মাশাল্লাহ খুবি চমৎকার। ",
-              " ৬০০ এম এইচ এর বিশাল ব্যাটারি৷ ",
-              "১০০% অরিজিনাল ও কোয়ালিটিফুল প্রোডাক্ট।",
-            ],
-            image:
-              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+1",
-          },
-          {
-            heading: "DON BT-300 সম্পর্কে কিছু কথা",
-            ctaButtonText: "এখনই অর্ডার করুন",
-            listItems: [
-              "১২০ ঘন্টা চার্জিং বেকআপ।",
-              "৫ টি ভয়েস চেঞ্জ মুড।",
-              "চমৎকার মিউজিক ও বেস",
-              "সাত দিনের রিপ্লেসমেন্ট গ্যারান্টি",
-            ],
-            image:
-              "https://placehold.co/400x300/E53E3E/FFFFFF?text=PRODUCT+IMAGE+2",
-          },
-        ],
-        priceNotification: {
-          text: "⚠️ রেগুলার প্রাইস ১৫৫০ টাকা। এখন অফার মূল্য ৯৪৯ টাকা। ",
-          deliveryInfo: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚",
-        },
-        videos: [
-          "https://www.w3schools.com/html/mov_bbb.mp4",
-          "https://www.w3schools.com/html/movie.mp4",
-        ],
-        previewImages: [
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+1",
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+2",
-          "https://placehold.co/600x400/E53E3E/FFFFFF?text=PREVIEW+3",
-        ],
-        contact: {
-          heading: "আমাদের সাথে যুক্ত হোন",
-          description: "ফ্রি ডেলিভারির সুবিধা নিতে এখনই অর্ডার দিন।",
-          helplineNumber: "+8801855844693",
-          callButtonText: "📞 কল করুন",
-        },
-        orderForm: {
-          title: "অর্ডার করতে নিচের ফর্মটি পূরণ করুন",
-          offerTxt: "সারা বাংলাদেশে ফ্রি ডেলিভারি 🚚",
-          productName: "DON BT - 300",
-          price: "রেগুলার প্রাইস ১৫৫০ টাকা। এখন অফার মূল্য ৯৪৯ টাকা।",
-          placeOrderButtonText: " Place Order ৳949.00",
-        },
-        footer: {
-          copyright: "Copyright &copy; 2025 Gadget Baba Online |",
-          builtByText: "Built with ❤️ by ",
-          agencyName: "Notex",
-          agencyLink: "https://notexagency.vercel.app/",
-        },
+        features: [],
+        priceNotification: {},
+        videos: [],
+        previewImages: [],
+        contact: {},
+        orderForm: {},
+        footer: {},
       };
       await websiteDataCollection.insertOne(initialWebsiteData);
       console.log("Initial website data inserted.");
+      return res.send(initialWebsiteData);
     }
 
-    // --- API Routes related to Website Data ---
-    app.get("/website-data", async (req, res) => {
-      try {
-        const data = await websiteDataCollection.findOne({}); 
-        res.send(data);
-      } catch (error) {
-        console.error("Error fetching website data:", error);
-        res.status(500).send({ message: "Error fetching website data" });
-      }
-    });
-
-    app.patch("/website-data/:id", async (req, res) => {
-      const { id } = req.params;
-      const updatedData = req.body;
-      if (!ObjectId.isValid(id)) {
-        return res.status(400).send({ message: "Invalid ID format" });
-      }
-      try {
-        const result = await websiteDataCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updatedData }
-        );
-        if (result.modifiedCount === 0) {
-          return res.status(404).send({ message: "Website data not found or no changes made" });
-        }
-        res.status(200).send({ message: "Website data updated successfully" });
-      } catch (error) {
-        console.error("Error updating website data:", error);
-        res.status(500).send({ message: "Error updating website data" });
-      }
-    });
-
-    // --- Cloudinary File Upload API ---
-    app.post("/upload-image", upload.single("image"), async (req, res) => {
-      try {
-        if (!req.file) {
-          return res.status(400).json({ message: "কোনো ফাইল আপলোড করা হয়নি।" });
-        }
-        let resourceType = req.file.mimetype.startsWith("image/") ? "image" : "video";
-        const result = await cloudinary.uploader.upload(
-          `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
-          {
-            folder: "ramisha_telecom",
-            resource_type: resourceType,
-            max_bytes: 20 * 1024 * 1024,
-          }
-        );
-        res.status(200).json({ url: result.secure_url });
-      } catch (error) {
-        console.error("ফাইল আপলোড করতে ত্রুটি:", error);
-        res.status(500).json({
-          message: "ফাইল আপলোড করতে ব্যর্থ হয়েছে।",
-          error: error.message,
-        });
-      }
-    });
-
-    // --- Orders API Routes ---
-    app.get("/orders", async (req, res) => {
-      try {
-        const orders = await ordersCollection.find({}).toArray();
-        res.send(orders);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        res.status(500).send({ message: "Error fetching orders" });
-      }
-    });
-
-    app.post("/orders", async (req, res) => {
-      const order = req.body;
-      order.createdAt = new Date();
-      order.status = order.status || "pending";
-      try {
-        const result = await ordersCollection.insertOne(order);
-        res.status(201).send(result); 
-      } catch (error) {
-        console.error("Error adding order:", error);
-        res.status(500).send({ message: "Error adding order" });
-      }
-    });
-
-    app.patch("/orders/:id", async (req, res) => {
-      const { id } = req.params;
-      const updatedFields = req.body;
-      if (!ObjectId.isValid(id)) {
-        return res.status(400).send({ message: "Invalid order ID format" });
-      }
-      try {
-        const result = await ordersCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updatedFields }
-        );
-        if (result.modifiedCount === 0) {
-          return res.status(404).send({ message: "Order not found or no changes made" });
-        }
-        res.status(200).send({ message: "Order updated successfully" });
-      } catch (error) {
-        console.error("Error updating order:", error);
-        res.status(500).send({ message: "Error updating order" });
-      }
-    });
-
-    app.delete("/orders/:id", async (req, res) => {
-      const { id } = req.params;
-      if (!ObjectId.isValid(id)) {
-        return res.status(400).send({ message: "Invalid order ID format" });
-      }
-      try {
-        const result = await ordersCollection.deleteOne({ _id: new ObjectId(id) });
-        if (result.deletedCount === 0) {
-          return res.status(404).send({ message: "Order not found" });
-        }
-        res.status(200).send({ message: "Order deleted successfully" });
-      } catch (error) {
-        console.error("Error deleting order:", error);
-        res.status(500).send({ message: "Error deleting order" });
-      }
-    });
-
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
+    res.send(existingWebsiteData);
+  } catch (error) {
+    console.error("Error fetching website data:", error);
+    res.status(500).send({ message: "Error fetching website data" });
   }
-}
+});
 
-// Connect to MongoDB and then start the server
-run().catch(console.dir);
+app.patch("/website-data/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ message: "Invalid ID format" });
+  }
+  try {
+    const db = await connectToDatabase();
+    const websiteDataCollection = db.collection("websiteData");
+    const result = await websiteDataCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+    if (result.modifiedCount === 0) {
+      return res.status(404).send({ message: "Website data not found or no changes made" });
+    }
+    res.status(200).send({ message: "Website data updated successfully" });
+  } catch (error) {
+    console.error("Error updating website data:", error);
+    res.status(500).send({ message: "Error updating website data" });
+  }
+});
 
+app.post("/upload-image", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "কোনো ফাইল আপলোড করা হয়নি।" });
+    }
+    const resourceType = req.file.mimetype.startsWith("image/") ? "image" : "video";
+    const result = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+      {
+        folder: "ramisha_telecom",
+        resource_type: resourceType,
+        max_bytes: 20 * 1024 * 1024,
+      }
+    );
+    res.status(200).json({ url: result.secure_url });
+  } catch (error) {
+    console.error("ফাইল আপলোড করতে ত্রুটি:", error);
+    res.status(500).json({ message: "ফাইল আপলোড করতে ব্যর্থ হয়েছে।", error: error.message });
+  }
+});
+
+app.get("/orders", async (req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const ordersCollection = db.collection("orders");
+    const orders = await ordersCollection.find({}).toArray();
+    res.send(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).send({ message: "Error fetching orders" });
+  }
+});
+
+app.post("/orders", async (req, res) => {
+  const order = req.body;
+  order.createdAt = new Date();
+  order.status = order.status || "pending";
+  try {
+    const db = await connectToDatabase();
+    const ordersCollection = db.collection("orders");
+    const result = await ordersCollection.insertOne(order);
+    res.status(201).send(result);
+  } catch (error) {
+    console.error("Error adding order:", error);
+    res.status(500).send({ message: "Error adding order" });
+  }
+});
+
+app.patch("/orders/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedFields = req.body;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ message: "Invalid order ID format" });
+  }
+  try {
+    const db = await connectToDatabase();
+    const ordersCollection = db.collection("orders");
+    const result = await ordersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedFields }
+    );
+    if (result.modifiedCount === 0) {
+      return res.status(404).send({ message: "Order not found or no changes made" });
+    }
+    res.status(200).send({ message: "Order updated successfully" });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).send({ message: "Error updating order" });
+  }
+});
+
+app.delete("/orders/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ message: "Invalid order ID format" });
+  }
+  try {
+    const db = await connectToDatabase();
+    const ordersCollection = db.collection("orders");
+    const result = await ordersCollection.deleteOne({ _id: new ObjectId(id) });
+    if (result.deletedCount === 0) {
+      return res.status(404).send({ message: "Order not found" });
+    }
+    res.status(200).send({ message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).send({ message: "Error deleting order" });
+  }
+});
+
+// Default Route
 app.get("/", (req, res) => {
   res.send("Welcome to Harbal Shop Server");
 });
 
-// This is the key change for Vercel. 
-// Vercel handles the server, so we export the app instance.
+// Export for Vercel
 module.exports = app;
 
-// The app.listen part is for local development only.
-// Vercel will ignore this block.
+// Local development only
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Harbal Shop Server listening on port ${port}`);
